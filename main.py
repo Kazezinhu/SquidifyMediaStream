@@ -12,91 +12,79 @@ test_id = '14b5f2fd652855752e115730d88488c2'  # city ruins
 # hills = 3aab83f9ed78bbdacebdf86b74ca8db7
 
 
-def update_data():
+def request_data():
     url = "https://www.squidify.org/api/song/"
     response = requests.get(url)
-    data = json.loads(response.content)
     f = open("data.json", "w")
     f.write(response.content.decode("utf-8"))
     f.close()
-    return data
 
 
-def retrieve_data():
-    f = open("data.json", "r")
-    data = json.loads(f.read())
-    f.close()
-    return data
-
-
-data = 0
-if os.path.isfile("data.json"):
-    data = retrieve_data()
-else:
-    data = update_data()
-
-
-def reload_data():
-    global data
-    data = update_data()
-
-
-def get_line(id: str):
-    for item in data:
-        if item["id"] == id:
-            return item
+def request_album_data(id: str):
+    url = "https://www.squidify.org/api/song/?_sort=album&_start=0&_end=0&album_id=" + id
+    print(url)
+    response = requests.get(url)
+    print(response.content)
+    return json.loads(response.content)
 
 
 def get_url(id: str):
     return f"https://www.squidify.org/rest/stream?u={stream_url_parameter[0]}&t={stream_url_parameter[1]}&s={stream_url_parameter[2]}&f={stream_url_parameter[3]}&v={stream_url_parameter[4]}&c={stream_url_parameter[5]}&id={id}"
 
 
-# f = open("songs.txt", "w")
-# f.write(response.content.decode("utf-8"))
-# f.close()
+if not os.path.isfile("data.json"):
+    request_data()
 
 instance = vlc.Instance()
 player = instance.media_player_new()
 player.audio_set_track(1)
 player.audio_set_volume(50)
 
-song_id = test_id
+
+def play(length, t_id):
+    media = instance.media_new(get_url(t_id))
+    player.set_media(media)
+    time.sleep(1)
+    player.play()
+    time.sleep(1)
+    print("VLC State: ", player.get_state())
+    time.sleep(length-1)
+
 
 close = False
 while close is False:
 
-    requested_song = input("Enter the song id: ")
+    request_type = input("Enter id type (a - album, t - track): ")
 
-    results = get_line(requested_song)
+    request_id = test_id
 
-    if results is not None:
-        song_id = requested_song
+    if request_type == 'a':
+        request_id = input("Enter album id: ")
+    elif request_type == 't':
+        request_id = input("Enter track id: ")
     else:
-        print('Music not found.')
+        print('Invalid id type.')
         continue
 
-    length = float(results.get('duration'))
+    if request_type == 'a':
+        album = request_album_data(request_id)
 
-    media = instance.media_new(get_url(song_id))
-    player.set_media(media)
-    time.sleep(1)
-    player.play()
-    print("VLC State: ", player.get_state())
-    time.sleep(length)
+        if album.get('error') is not None:
+            print('Album not found.')
+            continue
 
+        for track in album:
+            play(float(track.get('duration')), track.get('id'))
 
-# media.parse_with_options(1, 0)
-# prev = ""
-# while True:
-  # time.sleep(1)
-  # m = media.get_meta(12) # vlc.Meta 12: 'NowPlaying',
-    # if m != prev:
-        # print("Now playing", m)
-        # prev = m
+    if request_type == 't':
+        url = "https://www.squidify.org/api/song/" + request_id
+        print(url)
+        get_results = requests.get(url)
+        print(get_results.content)
+        results = json.loads(get_results.content)
 
-# pya = pyaudio.PyAudio()
-# audio_stream = requests.get(get_url(id), stream=True)
-# stream = pya.open(format=pya.get_format_from_width(2), channels=2, rate=44100, output=True, output_device_index=6)
-# stream.write(audio_stream.content[0].to_bytes())
-# stream.stop_stream()
-# stream.close()
+        if results.get('error') is not None:
+            print('Track not found.')
+            continue
+
+        play(float(results.get('duration')), request_id)
