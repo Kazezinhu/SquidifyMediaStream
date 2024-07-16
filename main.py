@@ -1,3 +1,4 @@
+import datetime
 import json
 import os.path
 
@@ -10,6 +11,7 @@ stream_url_parameter = ['Guest', '2dc98a10999257c14a0920f57d129b02', '318fe6', '
 test_id = '14b5f2fd652855752e115730d88488c2'  # city ruins
 # ancients = caa0ddc79bccc7f904b0f9192c9949a0
 # hills = 3aab83f9ed78bbdacebdf86b74ca8db7
+# album = 3edbf1c8fe1e57c4d5df795e9e16318d
 
 
 def request_data():
@@ -46,7 +48,7 @@ def get_url(id: str):
     return f"https://www.squidify.org/rest/stream?u={stream_url_parameter[0]}&t={stream_url_parameter[1]}&s={stream_url_parameter[2]}&f={stream_url_parameter[3]}&v={stream_url_parameter[4]}&c={stream_url_parameter[5]}&id={id}"
 
 
-if not os.path.isfile("data.json"):
+if not os.path.isfile("song.json") or not os.path.isfile("album.json"):
     request_data()
 
 instance = vlc.Instance()
@@ -55,14 +57,19 @@ player.audio_set_track(1)
 player.audio_set_volume(50)
 
 
-def play(length, t_id):
+def play(track):
+    t_length = track.get('duration')
+    t_id = track.get('id')
+    t_album = track.get('album')
+    t_title = track.get('title')
     media = instance.media_new(get_url(t_id))
     player.set_media(media)
     time.sleep(1)
     player.play()
-    time.sleep(1)
     print("VLC State: ", player.get_state())
-    time.sleep(length-1)
+    t_duration = str(datetime.timedelta(seconds=t_length))[:-7]
+    print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Duration: {t_duration}")
+    time.sleep(t_length-1)
 
 
 close = False
@@ -88,7 +95,7 @@ while close is False:
             continue
 
         for track in album:
-            play(float(track.get('duration')), track.get('id'))
+            play(track)
 
     if request_type == 't':
         track = request_song_data(request_id)
@@ -97,4 +104,4 @@ while close is False:
             print('Track not found.')
             continue
 
-        play(float(track.get('duration')), request_id)
+        play(track)
