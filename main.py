@@ -69,7 +69,7 @@ while close is False:
     if request_type == 'a':
         album = request_album_data(request_id)
 
-        if album.get('error') is not None:
+        if album[0].get('error') is not None:
             print('Album not found.')
             continue
 
