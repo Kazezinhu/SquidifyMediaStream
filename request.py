@@ -5,44 +5,6 @@ import json
 stream_url_parameter = ['Guest', '2dc98a10999257c14a0920f57d129b02', '318fe6', 'json', '1.8.0', 'NavidromeUI']
 
 
-def request_data():
-    url = "https://www.squidify.org/api/song/"
-    response = requests.get(url)
-    f = open("data.json", "w")
-    f.write(response.content.decode("utf-8"))
-    f.close()
-    return json.loads(response.content)
-
-
-def retrieve_data():
-    f = open("data.json", "r")
-    data = json.loads(f.read())
-    f.close()
-    return data
-
-
-def index_data():
-    data = retrieve_data()
-    songs = {}
-    albums = {}
-    for i in data:
-        songs[i.get('id')] = i.get('title')
-        albums[i.get('albumId')] = i.get('album')
-
-    f = open("index.json", "w")
-    index = json.dumps({'song': songs, 'album': albums})
-    f.write(index)
-    f.close()
-    return json.loads(index)
-
-
-def retrieve_index():
-    f = open("index.json", "r")
-    index = json.loads(f.read())
-    f.close()
-    return index
-
-
 def request_album_data(id: str):
     url = "https://www.squidify.org/api/song/?_sort=album&_start=0&_end=0&album_id=" + id
     print(url)
