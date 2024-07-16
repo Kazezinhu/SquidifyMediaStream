@@ -28,18 +28,6 @@ def set_play(track):
     t_duration = str(datetime.timedelta(seconds=track.get('duration')))[:-7]
 
 
-async def stop():
-    player.stop()
-
-
-async def pause():
-    player.pause()
-
-
-async def resume():
-    player.play()
-
-
 async def play():
     player.play()
     print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Duration: {t_duration}")
@@ -54,6 +42,7 @@ async def play_album(album):
 async def main():
     close = False
     print("Enter 'q' to quit.")
+    print("Enter 'p' to pause/resume and 's' to stop.")
     while close is False:
 
         request_type = input("Enter id type (a - album, t - track): ")
@@ -62,11 +51,33 @@ async def main():
             request_id = input("Enter album id: ")
         elif request_type == 't':
             request_id = input("Enter track id: ")
+        elif request_type == 'get':
+            request_id = input('Album id: ')
+        elif request_type == 'p':
+            if player.get_state() == vlc.State.Paused:
+                print("Resuming")
+            else:
+                print("Pausing")
+            player.pause()
+            continue
+        elif request_type == 's':
+            player.stop()
+            continue
         elif request_type == 'q':
             break
         else:
             print('Invalid id type.')
             continue
+
+        if request_type == 'get':
+            album = request_album_data(request_id)
+
+            if album[0].get('error') is not None:
+                print('Album not found.')
+                continue
+
+            for song in album:
+                print(f"{song.get('title')} - {song.get('id')}")
 
         if request_type == 'a':
             album = request_album_data(request_id)
