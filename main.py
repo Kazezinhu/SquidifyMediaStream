@@ -13,15 +13,29 @@ test_id = '14b5f2fd652855752e115730d88488c2'  # city ruins
 
 
 def request_data():
-    url = "https://www.squidify.org/api/song/"
-    response = requests.get(url)
-    f = open("data.json", "w")
+    song = "https://www.squidify.org/api/song/"
+    response = requests.get(song)
+    f = open("song.json", "w")
+    f.write(response.content.decode("utf-8"))
+    f.close()
+
+    album = "https://www.squidify.org/api/album/"
+    response = requests.get(album)
+    f = open("album.json", "w")
     f.write(response.content.decode("utf-8"))
     f.close()
 
 
 def request_album_data(id: str):
     url = "https://www.squidify.org/api/song/?_sort=album&_start=0&_end=0&album_id=" + id
+    print(url)
+    response = requests.get(url)
+    print(response.content)
+    return json.loads(response.content)
+
+
+def request_song_data(id: str):
+    url = "https://www.squidify.org/api/song/" + id
     print(url)
     response = requests.get(url)
     print(response.content)
@@ -77,14 +91,10 @@ while close is False:
             play(float(track.get('duration')), track.get('id'))
 
     if request_type == 't':
-        url = "https://www.squidify.org/api/song/" + request_id
-        print(url)
-        get_results = requests.get(url)
-        print(get_results.content)
-        results = json.loads(get_results.content)
+        track = request_song_data(request_id)
 
-        if results.get('error') is not None:
+        if track.get('error') is not None:
             print('Track not found.')
             continue
 
-        play(float(results.get('duration')), request_id)
+        play(float(track.get('duration')), request_id)
