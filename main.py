@@ -5,13 +5,21 @@ import os.path
 import requests
 import vlc
 import time
+import asyncio
 
 # u, t, s, f, v, c
 stream_url_parameter = ['Guest', '2dc98a10999257c14a0920f57d129b02', '318fe6', 'json', '1.8.0', 'NavidromeUI']
-test_id = '14b5f2fd652855752e115730d88488c2'  # city ruins
+# city ruins = 14b5f2fd652855752e115730d88488c2
 # ancients = caa0ddc79bccc7f904b0f9192c9949a0
 # hills = 3aab83f9ed78bbdacebdf86b74ca8db7
 # album = 3edbf1c8fe1e57c4d5df795e9e16318d
+
+instance = vlc.Instance()
+player = instance.media_player_new()
+player.audio_set_track(1)
+player.audio_set_volume(50)
+
+global t_duration, t_id, t_album, t_title
 
 
 def request_data():
@@ -29,18 +37,20 @@ def request_data():
 
 
 def request_album_data(id: str):
+    if id.rfind(" ") != -1:
+        return None
     url = "https://www.squidify.org/api/song/?_sort=album&_start=0&_end=0&album_id=" + id
     print(url)
     response = requests.get(url)
-    print(response.content)
     return json.loads(response.content)
 
 
 def request_song_data(id: str):
+    if id.rfind(" ") != -1:
+        return None
     url = "https://www.squidify.org/api/song/" + id
     print(url)
     response = requests.get(url)
-    print(response.content)
     return json.loads(response.content)
 
 
@@ -51,13 +61,21 @@ def get_url(id: str):
 if not os.path.isfile("song.json") or not os.path.isfile("album.json"):
     request_data()
 
-instance = vlc.Instance()
-player = instance.media_player_new()
-player.audio_set_track(1)
-player.audio_set_volume(50)
+
+async def stop():
+    await player.stop()
 
 
-def play(track):
+async def pause():
+    await player.pause()
+
+
+async def resume():
+    await player.play()
+
+
+def set_play(track):
+    global t_duration, t_id, t_album, t_title
     t_length = track.get('duration')
     t_id = track.get('id')
     t_album = track.get('album')
@@ -65,43 +83,52 @@ def play(track):
     media = instance.media_new(get_url(t_id))
     player.set_media(media)
     time.sleep(1)
-    player.play()
     print("VLC State: ", player.get_state())
     t_duration = str(datetime.timedelta(seconds=t_length))[:-7]
+
+
+async def play():
+    player.play()
     print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Duration: {t_duration}")
-    time.sleep(t_length-1)
 
 
-close = False
-while close is False:
+async def play_album(album):
+    for track in album:
+        set_play(track)
+        await asyncio.create_task(play())
 
-    request_type = input("Enter id type (a - album, t - track): ")
 
-    request_id = test_id
+async def main():
+    close = False
+    while close is False:
 
-    if request_type == 'a':
-        request_id = input("Enter album id: ")
-    elif request_type == 't':
-        request_id = input("Enter track id: ")
-    else:
-        print('Invalid id type.')
-        continue
+        request_type = input("Enter id type (a - album, t - track): ")
 
-    if request_type == 'a':
-        album = request_album_data(request_id)
-
-        if album[0].get('error') is not None:
-            print('Album not found.')
+        if request_type == 'a':
+            request_id = input("Enter album id: ")
+        elif request_type == 't':
+            request_id = input("Enter track id: ")
+        else:
+            print('Invalid id type.')
             continue
 
-        for track in album:
-            play(track)
+        if request_type == 'a':
+            album = request_album_data(request_id)
 
-    if request_type == 't':
-        track = request_song_data(request_id)
+            if album[0].get('error') is not None:
+                print('Album not found.')
+                continue
 
-        if track.get('error') is not None:
-            print('Track not found.')
-            continue
+            await play_album(album)
 
-        play(track)
+        if request_type == 't':
+            track = request_song_data(request_id)
+
+            if track.get('error') is not None:
+                print('Track not found.')
+                continue
+
+            set_play(track)
+            await asyncio.create_task(play())
+
+asyncio.run(main())
