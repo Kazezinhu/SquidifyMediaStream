@@ -48,9 +48,7 @@ async def play():
 
 
 def song_ended(self, event):
-    player.next()
-    set_play()
-    print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Duration: {t_duration}")
+    print('smth')
 
 
 def media_list_ended(self, event):
@@ -84,7 +82,7 @@ async def main():
     print("Types: a - album, t - track, get - get album, dl - download track")
     while close is False:
 
-        request_type = input("Enter id type: ")
+        request_type = input("Enter action type:\n")
 
         match request_type:
 
@@ -124,7 +122,10 @@ async def main():
 
         if request_type == 'get':
             album = rq.request_album_data(request_id)
-            print(album)
+
+            if album is None:
+                print('Album not found.')
+                continue
 
             if album[0].get('error') is not None:
                 print('Album not found.')
@@ -136,6 +137,10 @@ async def main():
         if request_type == 'a':
             album = rq.request_album_data(request_id)
 
+            if album is None:
+                print('Album not found.')
+                continue
+
             if album[0].get('error') is not None:
                 print('Album not found.')
                 continue
@@ -144,6 +149,10 @@ async def main():
 
         if request_type == 't':
             track = rq.request_song_data(request_id)
+
+            if track is None:
+                print('Track not found.')
+                continue
 
             if track.get('error') is not None:
                 print('Track not found.')

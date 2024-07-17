@@ -28,6 +28,7 @@ def get_url(id: str):
 async def song_dl(id: str):
     info = request_song_data(id)
     if info is None or info.get('error') is not None:
+        print("Error downloading track")
         return
     url = get_url(id)
     response = requests.get(url)
