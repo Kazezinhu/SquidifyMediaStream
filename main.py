@@ -167,7 +167,5 @@ async def main():
                 await play()
 
     player.stop()
-    instance.vlm_release()
-    asyncio.current_task().cancel()
 
 asyncio.run(main())
