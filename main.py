@@ -78,7 +78,7 @@ async def main():
     event_manager.event_attach(vlc.EventType.MediaListPlayerNextItemSet, next_item_set, 1)
     close = False
     print("Enter 'q' to quit.")
-    print("Enter 'p' to pause/resume, 'stop' to stop and 'next' for next.")
+    print("Enter 'p' to pause/resume, 'stop' to stop, 'next' for next and 'volume' to change volume.")
     print("Types: a - album, t - track, get - get album, dl - download track")
     while close is False:
 
@@ -108,11 +108,15 @@ async def main():
             case 'status':
                 print(player.get_state())
                 if player.get_state() == vlc.State.Playing:
-                    print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}")
+                    print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}")
                 continue
             case 'dl':
                 request_id = input("Enter track id to download: ")
                 await asyncio.create_task(rq.song_dl(request_id))
+                continue
+            case 'volume':
+                vol = int(input('Enter volume: '))
+                player.get_media_player().audio_set_volume(vol)
                 continue
             case 'q':
                 break
