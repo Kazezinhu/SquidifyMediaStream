@@ -64,18 +64,17 @@ async def play_album(album):
     for track in album:
         medialist.add_media(rq.get_url(track.get('id')))
         playqueue.put(track)
-    if not player.is_playing():
+    if player_free():
         player.next()
         await play()
     else:
-        print("Queued: " + album.get('title'))
+        print("Queued: " + album[0].get('album'))
 
 
 def stop():
     player.stop()
     global medialist
     medialist = instance.media_list_new()
-    medialist.retain()
     player.set_media_list(medialist)
     with playqueue.mutex:
         playqueue.queue.clear()
