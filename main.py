@@ -71,6 +71,16 @@ async def play_album(album):
         print("Queued: " + album.get('title'))
 
 
+def stop():
+    player.stop()
+    global medialist
+    medialist = instance.media_list_new()
+    medialist.retain()
+    player.set_media_list(medialist)
+    with playqueue.mutex:
+        playqueue.queue.clear()
+
+
 async def main():
     event_manager = player.event_manager()
     event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, song_ended, 1)
@@ -100,7 +110,7 @@ async def main():
                 player.pause()
                 continue
             case 'stop':
-                player.stop()
+                stop()
                 continue
             case 'next':
                 player.next()
