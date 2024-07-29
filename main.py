@@ -1,5 +1,4 @@
 import datetime
-import time
 
 import vlc
 import asyncio
@@ -24,7 +23,8 @@ player.set_media_list(medialist)
 
 global t_duration, t_id, t_album, t_title
 
-playqueue = queue.Queue()
+mediaplaylist = []
+current = -1
 
 
 def player_free():
@@ -33,7 +33,7 @@ def player_free():
 
 
 def set_play():
-    track = playqueue.get()
+    track = mediaplaylist[current]
     global t_duration, t_id, t_album, t_title
     t_id = track.get('id')
     t_album = track.get('album')
@@ -56,6 +56,8 @@ def media_list_ended(self, event):
 
 
 def next_item_set(self, event):
+    global current
+    current += 1
     set_play()
     print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Duration: {t_duration}")
 
@@ -63,7 +65,7 @@ def next_item_set(self, event):
 async def play_album(album):
     for track in album:
         medialist.add_media(rq.get_url(track.get('id')))
-        playqueue.put(track)
+        mediaplaylist.append(track)
     if player_free():
         player.next()
         await play()
@@ -76,8 +78,7 @@ def stop():
     global medialist
     medialist = instance.media_list_new()
     player.set_media_list(medialist)
-    with playqueue.mutex:
-        playqueue.queue.clear()
+    mediaplaylist.clear()
 
 
 async def main():
@@ -87,7 +88,8 @@ async def main():
     event_manager.event_attach(vlc.EventType.MediaListPlayerNextItemSet, next_item_set, 1)
     close = False
     print("Enter 'q' to quit.")
-    print("Enter 'p' to pause/resume, 'stop' to stop, 'next' for next and 'volume' to change volume.")
+    print("Enter 'p' to pause/resume, 'stop' to stop and 'volume' to change volume.")
+    print("Enter 'next' and 'prev' to control player.")
     print("Types: a - album, t - track, get - get album, dl - download track")
     while close is False:
 
@@ -114,10 +116,15 @@ async def main():
             case 'next':
                 player.next()
                 continue
+            case 'prev':
+                global current
+                current -= 2
+                player.previous()
+                continue
             case 'status':
                 print(player.get_state())
                 if player.get_state() == vlc.State.Playing:
-                    print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}")
+                    print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current}")
                 continue
             case 'dl':
                 request_id = input("Enter track id to download: ")
@@ -172,7 +179,7 @@ async def main():
                 continue
 
             medialist.add_media(rq.get_url(track.get('id')))
-            playqueue.put(track)
+            mediaplaylist.append(track)
             if player.is_playing():
                 print("Queued: " + track.get('title'))
             else:
