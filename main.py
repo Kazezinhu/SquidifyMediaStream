@@ -81,7 +81,17 @@ def stop():
     mediaplaylist.clear()
 
 
+def show_list():
+    for i in range(0, len(mediaplaylist)):
+        track = mediaplaylist[i]
+        msg = f"{i} : {track.get('title')}"
+        if current == i:
+            msg = msg + " - Playing"
+        print(msg)
+
+
 async def main():
+    global medialist, current
     event_manager = player.event_manager()
     event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, song_ended, 1)
     event_manager.event_attach(vlc.EventType.MediaListEndReached, media_list_ended, 1)
@@ -90,6 +100,7 @@ async def main():
     print("Enter 'q' to quit.")
     print("Enter 'p' to pause/resume, 'stop' to stop and 'volume' to change volume.")
     print("Enter 'next' and 'prev' to control player.")
+    print("Enter 'list' to view the current playlist.")
     print("Types: a - album, t - track, get - get album, dl - download track")
     while close is False:
 
@@ -125,6 +136,9 @@ async def main():
                 print(player.get_state())
                 if player.get_state() == vlc.State.Playing:
                     print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current}")
+                continue
+            case 'list':
+                show_list()
                 continue
             case 'dl':
                 request_id = input("Enter track id to download: ")
@@ -177,6 +191,11 @@ async def main():
             if track.get('error') is not None:
                 print('Track not found.')
                 continue
+
+            if player.get_state() == vlc.State.Ended or player.get_state() == vlc.State.Stopped:
+                mediaplaylist.clear()
+                medialist = instance.media_list_new()
+                current = 0
 
             medialist.add_media(rq.get_url(track.get('id')))
             mediaplaylist.append(track)
