@@ -172,11 +172,12 @@ async def search():
         except ValueError:
             continue
 
-        if selected <= 0 or selected +1 >= len(result):
+        if selected <= 0 or selected + 1 >= len(result):
             continue
 
         current_prompt = "Select option: "
         if not is_album:
+            track_id = result[selected].get("id")
             print("Options:\n1: Play\n2: Download\n0: Exit")
             while True:
                 value = input("Select option: ")
@@ -185,14 +186,15 @@ async def search():
                     case "0":
                         return
                     case "1":
-                        await play_track(rq.request_song_data(result[selected].get("id")))
+                        await play_track(rq.request_song_data(track_id))
                         break
                     case "2":
-                        await rq.song_dl(result[selected].get("id"))
+                        await rq.song_dl(track_id)
                         break
                     case _:
                         continue
         else:
+            album = rq.request_album_data(result[selected].get("id"))
             while True:
                 print("Options:\n1: Play\n2: Show Tracks\n0: Exit")
                 value = input("Select option: ")
@@ -200,11 +202,9 @@ async def search():
                     case "0":
                         return
                     case "1":
-                        album = rq.request_album_data(result[selected].get("id"))
                         await play_album(album)
                         break
                     case "2":
-                        album = rq.request_album_data(result[selected].get("id"))
                         await show_album_tracks(album)
                     case _:
                         continue
@@ -260,9 +260,10 @@ async def main():
                 player.previous()
                 continue
             case 'status':
-                print(player.get_state())
                 if player.get_state() == vlc.State.Playing:
                     print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current}")
+                else:
+                    print("Nothing is playing.")
                 continue
             case 'list':
                 show_list()
