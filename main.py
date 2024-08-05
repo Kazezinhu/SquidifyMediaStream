@@ -18,7 +18,6 @@ global t_duration, t_id, t_album, t_title
 
 mediaplaylist = []
 current = -1
-
 current_prompt = ""
 
 
@@ -33,8 +32,6 @@ def set_play():
     t_id = track.get('id')
     t_album = track.get('album')
     t_title = track.get('title')
-    # media = instance.media_new(rq.get_url(t_id))
-    # player.set_media(media)
     t_duration = str(datetime.timedelta(seconds=track.get('duration')))[:-7]
 
 
@@ -261,7 +258,7 @@ async def main():
                 continue
             case 'status':
                 if player.get_state() == vlc.State.Playing:
-                    print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current}")
+                    print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current+1}")
                 else:
                     print("Nothing is playing.")
                 continue
