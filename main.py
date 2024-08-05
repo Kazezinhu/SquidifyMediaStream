@@ -21,11 +21,6 @@ current = -1
 current_prompt = ""
 
 
-def player_free():
-    state = player.get_state()
-    return state in (vlc.State.Stopped, vlc.State.NothingSpecial, vlc.State.Ended, vlc.State.Error)
-
-
 def set_play():
     track = mediaplaylist[current]
     global t_duration, t_id, t_album, t_title
@@ -62,6 +57,8 @@ def check_player():
     if player.get_state() == vlc.State.Ended or player.get_state() == vlc.State.Stopped:
         mediaplaylist.clear()
         medialist = instance.media_list_new()
+        medialist.retain()
+        player.set_media_list(medialist)
         current = -1
 
 
@@ -70,11 +67,13 @@ async def play_album(album):
     for track in album:
         medialist.add_media(rq.get_url(track.get('id')))
         mediaplaylist.append(track)
-    if player_free():
+    if player.is_playing() or player.get_state() == vlc.State.Paused:
+        print("Queued: " + album[0].get('album'))
+    else:
         player.next()
         await play()
-    else:
-        print("Queued: " + album[0].get('album'))
+        global current
+        current = 0
 
 
 async def play_track(track):
@@ -82,11 +81,13 @@ async def play_track(track):
 
     medialist.add_media(rq.get_url(track.get('id')))
     mediaplaylist.append(track)
-    if player.is_playing():
+    if player.is_playing() or player.get_state() == vlc.State.Paused:
         print("Queued: " + track.get('title'))
     else:
         player.next()
         await play()
+        global current
+        current = 0
 
 
 async def show_album_tracks(album):
@@ -99,7 +100,6 @@ def stop():
     player.stop()
     global medialist
     medialist = instance.media_list_new()
-    player.set_media_list(medialist)
     mediaplaylist.clear()
 
 
@@ -264,6 +264,7 @@ async def main():
                 player.previous()
                 continue
             case 'status':
+                print(player.get_state())
                 if player.get_state() == vlc.State.Playing:
                     print(f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current+1}")
                 else:
