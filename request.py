@@ -1,8 +1,13 @@
 import requests
 import json
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # u, t, s, f, v, c
-stream_url_parameter = ['Guest', '2dc98a10999257c14a0920f57d129b02', '318fe6', 'json', '1.8.0', 'NavidromeUI']
+stream_url_parameter = [os.getenv('u'), os.getenv('t'), os.getenv('s'), 'json', '1.8.0', 'NavidromeUI']
 
 
 def request_album_data(id: str):
