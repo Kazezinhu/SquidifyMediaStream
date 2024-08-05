@@ -72,8 +72,6 @@ async def play_album(album):
     else:
         player.next()
         await play()
-        global current
-        current = 0
 
 
 async def play_track(track):
@@ -86,8 +84,6 @@ async def play_track(track):
     else:
         player.next()
         await play()
-        global current
-        current = 0
 
 
 async def show_album_tracks(album):
@@ -266,7 +262,7 @@ async def main():
             case 'status':
                 print(player.get_state())
                 if player.get_state() == vlc.State.Playing:
-                    print(f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current+1}")
+                    print(f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current}")
                 else:
                     print("Nothing is playing.")
                 continue
