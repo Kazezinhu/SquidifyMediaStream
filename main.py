@@ -51,8 +51,9 @@ def next_item_set(self, event):
     global current
     current += 1
     set_play()
-    print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Duration: {t_duration}")
-    print(current_prompt)
+    print(f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Duration: {t_duration}\n")
+    if current_prompt != " ":
+        print(current_prompt)
 
 
 # checks if the player is playing and then clears the playlist
@@ -103,12 +104,13 @@ def stop():
 
 
 def show_list():
-    print("Current playlist:")
+    print("\nCurrent playlist:")
     for i in range(0, len(mediaplaylist)):
         track = mediaplaylist[i]
-        msg = f"{i} : {track.get('title')}"
+        duration = str(datetime.timedelta(seconds=track.get('duration')))[:-7]
+        msg = f"{i} : {track.get('title')} - {duration}"
         if current == i:
-            msg = msg + " - Playing"
+            msg = msg + " -- Playing"
         print(msg)
 
 
@@ -119,7 +121,7 @@ async def search():
     is_album = False
 
     while True:
-        search_type = input("What do you want to search?\n1: Album\n2: Song\n0: Exit\nSelection: ")
+        search_type = input("\nWhat do you want to search?\n1: Album\n2: Song\n0: Exit\nSelection: ")
 
         match search_type:
             case '0':
@@ -134,7 +136,7 @@ async def search():
                 continue
 
     current_prompt = "Search: "
-    print("Type 'exit' to exit.")
+    print("\nType 'exit' to exit.")
     value = input("Search: ")
 
     if value == "exit":
@@ -143,9 +145,10 @@ async def search():
     result = rq.search_result(value, is_album)
 
     if result is None:
-        print("No results found.")
+        print("\nNo results found.")
         return
 
+    print("")
     for index, item in enumerate(result, start=1):
         if is_album:
             content = item.get("name") + ", by " + item.get("albumArtist") + ", " + str(item.get("songCount")) + " tracks, released in " + item.get("date")
@@ -154,8 +157,8 @@ async def search():
         print(f"{index} - {content}")
 
     current_prompt = "Select result: "
+    print("Type '0' to return to search, 'q' to return to main program.")
     while True:
-        print("Type '0' to return to search, 'q' to return to main program.")
         value = input("Select result: ")
 
         if value == "0":
@@ -175,7 +178,7 @@ async def search():
         current_prompt = "Select option: "
         if not is_album:
             track_id = result[selected].get("id")
-            print("Options:\n1: Play\n2: Download\n0: Exit")
+            print("\nOptions:\n1: Play\n2: Download\n0: Exit")
             while True:
                 value = input("Select option: ")
 
@@ -183,6 +186,7 @@ async def search():
                     case "0":
                         return
                     case "1":
+                        current_prompt = " "
                         await play_track(rq.request_song_data(track_id))
                         break
                     case "2":
@@ -193,12 +197,13 @@ async def search():
         else:
             album = rq.request_album_data(result[selected].get("id"))
             while True:
-                print("Options:\n1: Play\n2: Show Tracks\n0: Exit")
+                print("\nOptions:\n1: Play\n2: Show Tracks\n0: Exit")
                 value = input("Select option: ")
                 match value:
                     case "0":
                         return
                     case "1":
+                        current_prompt = " "
                         await play_album(album)
                         break
                     case "2":
@@ -228,7 +233,7 @@ async def main():
     while close is False:
 
         current_prompt = "Enter action type: "
-        request_type = input("Enter action type: ")
+        request_type = input("\nEnter action type: ")
 
         match request_type:
 
@@ -249,16 +254,18 @@ async def main():
                 stop()
                 continue
             case 'next':
+                current_prompt = " "
                 player.next()
                 continue
             case 'prev':
                 global current
                 current -= 2
+                current_prompt = " "
                 player.previous()
                 continue
             case 'status':
                 if player.get_state() == vlc.State.Playing:
-                    print(f"Now playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current+1}")
+                    print(f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current+1}")
                 else:
                     print("Nothing is playing.")
                 continue
