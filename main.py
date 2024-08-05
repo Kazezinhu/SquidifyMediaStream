@@ -3,13 +3,6 @@ import datetime
 import vlc
 import asyncio
 import request as rq
-import queue
-
-# city ruins = 14b5f2fd652855752e115730d88488c2
-# ancients = caa0ddc79bccc7f904b0f9192c9949a0
-# hills = 3aab83f9ed78bbdacebdf86b74ca8db7
-# orchestral = 3edbf1c8fe1e57c4d5df795e9e16318d
-# automata = b0ba791b4cd84ab97446471734e97f70
 
 instance = vlc.Instance()
 player = instance.media_list_player_new()
@@ -234,7 +227,7 @@ async def main():
     print("Enter 'next' and 'prev' to control player.")
     print("Enter 'list' to view the current playlist.")
     print("Enter 'search' to search.")
-    print("Types: a - album, t - track, get - get album, dl - download track")
+    # Test types using id: a - album, t - track, get - get album tracks, dl - download track
     while close is False:
 
         current_prompt = "Enter action type: "
