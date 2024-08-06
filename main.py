@@ -260,8 +260,7 @@ async def main():
                 player.previous()
                 continue
             case 'status':
-                print(player.get_state())
-                if player.get_state() == vlc.State.Playing:
+                if player.get_state() == vlc.State.Playing or player.get_state() == vlc.State.Paused:
                     print(f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current}")
                 else:
                     print("Nothing is playing.")
