@@ -168,7 +168,7 @@ async def search():
         except ValueError:
             continue
 
-        if selected < 0 or selected + 1 >= len(result):
+        if selected < 0 or selected + 1 > len(result):
             continue
 
         current_prompt = "Select option: "
