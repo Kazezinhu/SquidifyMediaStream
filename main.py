@@ -17,7 +17,7 @@ player.set_media_list(medialist)
 global t_duration, t_id, t_album, t_title
 
 mediaplaylist = []
-current = -1
+current = -1 #to be set to the previous index when changing tracks
 current_prompt = ""
 
 
@@ -97,6 +97,28 @@ def stop():
     global medialist
     medialist = instance.media_list_new()
     mediaplaylist.clear()
+
+
+def jump():
+    print("\nEnter q to exit.")
+    global current_prompt, current
+    current_prompt = "Enter the track index: "
+    while True:
+        input_string = input("Enter the track index: ")
+        if input_string == 'q':
+            return
+        try:
+            target = int(input_string)
+        except ValueError:
+            print("Please enter a valid number.")
+            continue
+        if target < 0 or target >= len(mediaplaylist):
+            print("Please enter a valid index.")
+            continue
+        current = target - 1
+        set_play()
+        player.play_item_at_index(target)
+        return
 
 
 def show_list():
@@ -223,9 +245,10 @@ async def main():
     print("Enter 'p' to pause/resume and 'volume' to change volume.")
     print("Enter 'stop' to stop and clear playlist.")
     print("Enter 'next' and 'prev' to control player.")
+    print("Enter 'jump' to jump to a track in the playlist.")
     print("Enter 'list' to view the current playlist.")
     print("Enter 'search' to search.")
-    # Test types using id: a - album, t - track, get - get album tracks, dl - download track
+    # Test types using id: a - play album, t - play track, get - get album tracks, dl - download track
     while close is False:
 
         current_prompt = "Enter action type: "
@@ -258,6 +281,12 @@ async def main():
                 current -= 2
                 current_prompt = " "
                 player.previous()
+                continue
+            case 'jump':
+                if not mediaplaylist:
+                    print("The playlist is empty.")
+                else:
+                    jump()
                 continue
             case 'status':
                 if player.get_state() == vlc.State.Playing or player.get_state() == vlc.State.Paused:
