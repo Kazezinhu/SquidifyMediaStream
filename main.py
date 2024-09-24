@@ -18,7 +18,7 @@ global t_duration, t_id, t_album, t_title
 
 mediaplaylist = []
 current = -1 #to be set to the previous index when changing tracks
-current_prompt = ""
+current_prompt = " "
 
 
 def set_play():
@@ -117,6 +117,7 @@ def jump():
             continue
         current = target - 1
         set_play()
+        current_prompt = " "
         player.play_item_at_index(target)
         return
 
@@ -196,7 +197,8 @@ async def search():
         current_prompt = "Select option: "
         if not is_album:
             track_id = result[selected].get("id")
-            print("\nOptions:\n1: Play\n2: Download\n0: Exit")
+            print("\nSelected track: " + result[selected].get("title"))
+            print("Options:\n1: Play\n2: Download\n0: Exit")
             while True:
                 value = input("Select option: ")
 
@@ -208,14 +210,15 @@ async def search():
                         await play_track(rq.request_song_data(track_id))
                         break
                     case "2":
-                        await rq.song_dl(track_id)
+                        await rq.song_dl(track_id, result[selected].get("title"))
                         break
                     case _:
                         continue
         else:
             album = rq.request_album_data(result[selected].get("id"))
             while True:
-                print("\nOptions:\n1: Play\n2: Show Tracks\n0: Exit")
+                print("\nSelected album: " + result[selected].get("name"))
+                print("Options:\n1: Play\n2: Show Tracks\n3: Download\n0: Exit")
                 value = input("Select option: ")
                 match value:
                     case "0":
@@ -226,6 +229,12 @@ async def search():
                         break
                     case "2":
                         await show_album_tracks(album)
+                    case "3":
+                        print("\nDownloading -- " + result[selected].get("name") + "\n")
+                        for track in album:
+                            await rq.song_dl(track.get("id"), track.get("title"))
+                        print("\nDownloaded all tracks -- " + result[selected].get("name"))
+                        break
                     case _:
                         continue
 
@@ -299,6 +308,10 @@ async def main():
                 continue
             case 'dl':
                 request_id = input("Enter track id to download: ")
+                info = rq.request_song_data(request_id)
+                if info is None or info.get('error') is not None:
+                    print("Error downloading track")
+                    continue
                 await asyncio.create_task(rq.song_dl(request_id))
                 continue
             case 'volume':
