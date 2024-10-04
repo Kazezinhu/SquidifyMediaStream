@@ -13,11 +13,10 @@ medialist = instance.media_list_new()
 medialist.retain()
 player.set_media_list(medialist)
 
-
 global t_duration, t_id, t_album, t_title
 
 mediaplaylist = []
-current = -1 #to be set to the previous index when changing tracks
+current = -1  # to be set to the previous index when changing tracks
 current_prompt = " "
 
 
@@ -170,9 +169,11 @@ async def search():
     print("")
     for index, item in enumerate(result, start=1):
         if is_album:
-            content = item.get("name") + ", by " + item.get("albumArtist") + ", " + str(item.get("songCount")) + " tracks, released in " + item.get("date")
+            content = item.get("name") + ", by " + item.get("albumArtist") + ", " + str(
+                item.get("songCount")) + " tracks, released in " + item.get("date")
         else:
-            content = item.get("title") + ", from " + item.get("album") + ", by " + item.get("artist") + ", released in " + item.get("date")
+            content = item.get("title") + ", from " + item.get("album") + ", by " + item.get(
+                "artist") + ", released in " + item.get("date")
         print(f"{index} - {content}")
 
     current_prompt = "Select result: "
@@ -210,7 +211,8 @@ async def search():
                         await play_track(rq.request_song_data(track_id))
                         break
                     case "2":
-                        await rq.song_dl(track_id, result[selected].get("title"))
+                        print("\nDownloading -- " + result[selected].get("title"))
+                        await rq.song_dl(track_id, result[selected].get("title"), result[selected].get("album"))
                         break
                     case _:
                         continue
@@ -230,10 +232,10 @@ async def search():
                     case "2":
                         await show_album_tracks(album)
                     case "3":
-                        print("\nDownloading -- " + result[selected].get("name") + "\n")
+                        print("\nDownloading -- " + result[selected].get("name"))
                         for track in album:
-                            await rq.song_dl(track.get("id"), track.get("title"))
-                        print("\nDownloaded all tracks -- " + result[selected].get("name"))
+                            await rq.song_dl(track.get("id"), track.get("title"), result[selected].get("name"))
+                        print("Downloaded all tracks -- " + result[selected].get("name"))
                         break
                     case _:
                         continue
@@ -264,7 +266,6 @@ async def main():
         request_type = input("\nEnter action type: ")
 
         match request_type:
-
             case 'a':
                 request_id = input("Enter album id: ")
             case 't':
@@ -299,7 +300,8 @@ async def main():
                 continue
             case 'status':
                 if player.get_state() == vlc.State.Playing or player.get_state() == vlc.State.Paused:
-                    print(f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current}")
+                    print(
+                        f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current}")
                 else:
                     print("Nothing is playing.")
                 continue
@@ -367,5 +369,6 @@ async def main():
             await play_track(track)
 
     player.stop()
+
 
 asyncio.run(main())

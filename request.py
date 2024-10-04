@@ -9,6 +9,8 @@ load_dotenv()
 # u, t, s, f, v, c
 stream_url_parameter = [os.getenv('u'), os.getenv('t'), os.getenv('s'), 'json', '1.8.0', 'NavidromeUI']
 
+path = "lib/"
+
 
 def request_album_data(id: str):
     url = "https://www.squidify.org/api/song/?_sort=album&_start=0&_end=0&album_id=" + id
@@ -32,7 +34,8 @@ def search_result(arg: str, is_album: bool):
     if is_album:
         response = requests.get(f"https://www.squidify.org/api/album?_end=72&_order=ASC&_sort=name&_start=0&name={arg}")
     else:
-        response = requests.get(f"https://www.squidify.org/api/song?_end=72&_order=ASC&_sort=title&_start=0&title={arg}")
+        response = requests.get(
+            f"https://www.squidify.org/api/song?_end=72&_order=ASC&_sort=title&_start=0&title={arg}")
     return json.loads(response.content)
 
 
@@ -42,10 +45,18 @@ def check_title(title: str):
     return title
 
 
-async def song_dl(song_id: str, title: str):
+async def song_dl(song_id: str, title: str, album: str):
     url = get_url(song_id)
     response = requests.get(url)
-    f = open(check_title(title) + ".flac", "wb")
+    album = album + "/"
+    if not os.path.exists(path + album):
+        os.makedirs(path + album)
+    full_path = path + album + check_title(title) + ".flac"
+    if os.path.exists(full_path):
+        print("Already downloaded -- " + title)
+        return
+
+    f = open(path + album + check_title(title) + ".flac", "wb")
     f.write(response.content)
     f.close()
     print("Downloaded -- " + title)
