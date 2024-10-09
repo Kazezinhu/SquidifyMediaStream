@@ -245,13 +245,7 @@ async def search():
     return
 
 
-async def main():
-    global medialist, current, current_prompt
-    event_manager = player.event_manager()
-    event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, song_ended, 1)
-    event_manager.event_attach(vlc.EventType.MediaListEndReached, media_list_ended, 1)
-    event_manager.event_attach(vlc.EventType.MediaListPlayerNextItemSet, next_item_set, 1)
-    close = False
+def show_help():
     print("Enter 'q' to quit.")
     print("Enter 'p' to pause/resume and 'volume' to change volume.")
     print("Enter 'stop' to stop and clear playlist.")
@@ -259,7 +253,18 @@ async def main():
     print("Enter 'jump' to jump to a track in the playlist.")
     print("Enter 'list' to view the current playlist.")
     print("Enter 'search' to search.")
+    print("Enter 'help' to show this message.")
     # Test types using id: a - play album, t - play track, get - get album tracks, dl - download track
+
+
+async def main():
+    global medialist, current, current_prompt
+    event_manager = player.event_manager()
+    event_manager.event_attach(vlc.EventType.MediaPlayerEndReached, song_ended, 1)
+    event_manager.event_attach(vlc.EventType.MediaListEndReached, media_list_ended, 1)
+    event_manager.event_attach(vlc.EventType.MediaListPlayerNextItemSet, next_item_set, 1)
+    close = False
+    show_help()
     while close is False:
 
         current_prompt = "Enter action type: "
@@ -312,9 +317,9 @@ async def main():
                 request_id = input("Enter track id to download: ")
                 info = rq.request_song_data(request_id)
                 if info is None or info.get('error') is not None:
-                    print("Error downloading track")
+                    print("Error downloading track.")
                     continue
-                await asyncio.create_task(rq.song_dl(request_id))
+                await asyncio.create_task(rq.song_dl(request_id, info.get('title'), info.get('album')))
                 continue
             case 'volume':
                 vol = int(input('Enter volume: '))
@@ -322,6 +327,9 @@ async def main():
                 continue
             case 'search':
                 await search()
+                continue
+            case 'help':
+                show_help()
                 continue
             case 'q':
                 break
