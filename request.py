@@ -44,6 +44,14 @@ def check_title(title: str):
         title = title.replace("/", "-")
     return title
 
+# Checks if the song is already downloaded
+def check_dl(title: str, album: str):
+    title = check_title(title)
+    final_path = path + album + "/" + title + ".flac"
+    if os.path.exists(final_path):
+        return final_path
+    return None
+
 
 async def song_dl(song_id: str, title: str, album: str):
     url = get_url(song_id)

@@ -64,8 +64,7 @@ def check_player():
 async def play_album(album):
     check_player()
     for track in album:
-        medialist.add_media(rq.get_url(track.get('id')))
-        mediaplaylist.append(track)
+        await queue_track(track)
     if player.is_playing() or player.get_state() == vlc.State.Paused:
         print("Queued: " + album[0].get('album'))
     else:
@@ -75,14 +74,22 @@ async def play_album(album):
 
 async def play_track(track):
     check_player()
-
-    medialist.add_media(rq.get_url(track.get('id')))
+    await queue_track(track)
     mediaplaylist.append(track)
     if player.is_playing() or player.get_state() == vlc.State.Paused:
         print("Queued: " + track.get('title'))
     else:
         player.next()
         await play()
+
+async def queue_track(track):
+    path = rq.check_dl(track.get('title'), track.get('album'))
+
+    if path is not None:
+        medialist.add_media(path)
+    else:
+        medialist.add_media(rq.get_url(track.get('id')))
+    mediaplaylist.append(track)
 
 
 async def show_album_tracks(album):
