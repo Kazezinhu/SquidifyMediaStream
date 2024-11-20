@@ -4,6 +4,8 @@ import vlc
 import asyncio
 import request as rq
 
+from threading import Thread
+
 instance = vlc.Instance()
 player = instance.media_list_player_new()
 player.get_media_player().audio_set_track(1)
@@ -44,10 +46,13 @@ def media_list_ended(self, event):
 def next_item_set(self, event):
     global current
     current += 1
-    set_play()
-    print(f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Duration: {t_duration}\n")
-    if current_prompt != " ":
-        print(current_prompt)
+    if current < len(mediaplaylist):
+        player.pause()
+    else:
+        set_play()
+        print(f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Duration: {t_duration}\n")
+        if current_prompt != " ":
+            print(current_prompt)
 
 
 # checks if the player is playing and then clears the playlist
@@ -121,7 +126,7 @@ def jump():
         if target < 0 or target >= len(mediaplaylist):
             print("Please enter a valid index.")
             continue
-        current = target - 1
+        current = target - 2
         set_play()
         current_prompt = " "
         player.play_item_at_index(target)
@@ -133,7 +138,7 @@ def show_list():
     for i in range(0, len(mediaplaylist)):
         track = mediaplaylist[i]
         duration = str(datetime.timedelta(seconds=track.get('duration')))[:-7]
-        msg = f"{i} : {track.get('title')} - {duration}"
+        msg = f"{i + 1} : {track.get('title')} - {duration}"
         if current == i:
             msg = msg + " -- Playing"
         print(msg)
@@ -219,14 +224,16 @@ async def search():
                         break
                     case "2":
                         print("\nDownloading -- " + result[selected].get("title"))
-                        await rq.song_dl(track_id, result[selected].get("title"), result[selected].get("album"))
+                        thread = Thread(target = rq.song_dl, args=(track_id, result[selected].get("title"), result[selected].get("album")))
+                        thread.daemon = True
+                        thread.start()
                         break
                     case _:
                         continue
         else:
             album = rq.request_album_data(result[selected].get("id"))
             while True:
-                print("\nSelected album: " + result[selected].get("name"))
+                print("\nSelected album: " + album[0].get("album"))
                 print("Options:\n1: Play\n2: Show Tracks\n3: Download\n0: Exit")
                 value = input("Select option: ")
                 match value:
@@ -239,10 +246,10 @@ async def search():
                     case "2":
                         await show_album_tracks(album)
                     case "3":
-                        print("\nDownloading -- " + result[selected].get("name"))
-                        for track in album:
-                            await rq.song_dl(track.get("id"), track.get("title"), result[selected].get("name"))
-                        print("Downloaded all tracks -- " + result[selected].get("name"))
+                        print("\nDownloading -- " + album[0].get("album"))
+                        thread = Thread(target = rq.album_dl, args=(album, ))
+                        thread.daemon = True
+                        thread.start()
                         break
                     case _:
                         continue
@@ -313,7 +320,7 @@ async def main():
             case 'status':
                 if player.get_state() == vlc.State.Playing or player.get_state() == vlc.State.Paused:
                     print(
-                        f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current}")
+                        f"\nNow playing: \n Album: {t_album}\n Title: {t_title}\n Volume: {player.get_media_player().audio_get_volume()}\n Current: {str(datetime.timedelta(seconds=player.get_media_player().get_time() / 1000))[:-7]}\n Duration: {t_duration}\n Index: {current + 1}")
                 else:
                     print("Nothing is playing.")
                 continue

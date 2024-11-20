@@ -52,8 +52,13 @@ def check_dl(title: str, album: str):
         return final_path
     return None
 
+def album_dl(album):
+    for track in album:
+        song_dl(track.get("id"), track.get("title"), album[0].get("album"))
+    print("Downloaded all tracks -- " + album.get("name"))
 
-async def song_dl(song_id: str, title: str, album: str):
+
+def song_dl(song_id: str, title: str, album: str):
     url = get_url(song_id)
     response = requests.get(url)
     album = album + "/"
