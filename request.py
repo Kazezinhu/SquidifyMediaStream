@@ -53,9 +53,10 @@ def check_dl(title: str, album: str):
     return None
 
 def album_dl(album):
+    print("\nDownloading -- " + album[0].get("album"))
     for track in album:
         song_dl(track.get("id"), track.get("title"), album[0].get("album"))
-    print("Downloaded all tracks -- " + album.get("name"))
+    print("Downloaded all tracks -- " + album[0].get("album"))
 
 
 def song_dl(song_id: str, title: str, album: str):

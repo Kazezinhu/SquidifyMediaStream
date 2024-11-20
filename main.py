@@ -223,7 +223,6 @@ async def search():
                         await play_track(rq.request_song_data(track_id))
                         break
                     case "2":
-                        print("\nDownloading -- " + result[selected].get("title"))
                         thread = Thread(target = rq.song_dl, args=(track_id, result[selected].get("title"), result[selected].get("album")))
                         thread.daemon = True
                         thread.start()
